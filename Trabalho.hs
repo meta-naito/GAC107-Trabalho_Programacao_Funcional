@@ -33,7 +33,7 @@ import Prelude hiding (elem, head, tail, init, last, length, negate, abs, otherw
 
 -- ATENÇÃO: Defina abaixo exatamente a letra do grupo atribuída a vocês:
 letra_do_grupo :: Char
-letra_do_grupo = '0'  -- Substitua pela sua letra (Ex: 'A', 'B', 'C'...)
+letra_do_grupo = 'O'  -- Substitua pela sua letra (Ex: 'A', 'B', 'C'...)
 
 -- ==============================================================================
 -- INSTRUÇÕES DE IMPLEMENTAÇÃO:
