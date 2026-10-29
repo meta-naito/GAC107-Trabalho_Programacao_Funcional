@@ -28,12 +28,12 @@ module Trabalho where
 import Data.Char (toLower, isSpace) -- toUpper removido por implementação própria
 import Data.List (sort)
 
--- 'hiding' esconde implementações do Prelude
-import Prelude hiding (elem, head, tail, init, last, length, negate, abs, otherwise, map, toUpper)
+-- 'hiding' esconde implementações
+import Prelude hiding (abs, elem, head, init, last, length, negate, otherwise, tail)
 
 -- ATENÇÃO: Defina abaixo exatamente a letra do grupo atribuída a vocês:
 letra_do_grupo :: Char
-letra_do_grupo = 'O'  -- Substitua pela sua letra (Ex: 'A', 'B', 'C'...)
+letra_do_grupo = 'O'  -- Substitua pela sua letra (Ex: -> a -> a  'A', 'B', 'C'...)
 
 -- ==============================================================================
 -- INSTRUÇÕES DE IMPLEMENTAÇÃO:
@@ -48,30 +48,28 @@ letra_do_grupo = 'O'  -- Substitua pela sua letra (Ex: 'A', 'B', 'C'...)
 -- Auxiliares
 -- ==============================================================================
 
--- otherwise :: Bool
-otherwise = True
+-- TODO: Implementação de `mod`
 
 -- abs:: (Ord i, Num i) => i -> i
 abs 0 = 0
 abs n = if n > 0 then n else negate n
 
--- elem :: (Eq a) => a -> [a] -> Bool
+-- associate :: (Eq t) => t -> [t] -> [t] ->  t
+associate n [] _ = n
+associate n _ [] = n
+associate n (x:xs) (y:ys)
+   | x == n    = y
+   | otherwise = associate n xs ys
+
+-- elem :: (Eq t) => t -> [t] -> Bool
 elem a [] = False
 elem a (x:xs)
    | a == x = True
    | otherwise = a `elem` xs
 
--- length :: (Num n) => [t] -> n
-length [] = 0
-length (_:xs) = 1 + length xs
-
 -- head :: [t] -> t
 head [] = error "list is empty"
 head (x:_) = x
-
--- tail :: [t] -> [t]
-tail [] = error "list is empty"
-tail (_:xs) = xs
 
 -- init :: [t] -> [t]
 init [] = error "list is empty"
@@ -83,84 +81,92 @@ last [] = error "list is empty"
 last [x] = x
 last (_:xs) = last xs
 
--- negate :: (Ord i, Num i) => i -> i
+-- length :: (Num i) => [t] -> i
+length [] = 0
+length (_:xs) = 1 + length xs
+
+-- negate :: (Eq i, Num i) => i -> i
 negate 0 = 0
 negate n = -n
 
+-- otherwise :: Bool
+otherwise = True
+
+-- tail :: [t] -> [t]
+tail [] = error "list is empty"
+tail (_:xs) = xs
+
 -- toUpper :: Char -> Char
 toUpper c
-   | c `elem` ['a'..'z'] = toEnum (fromEnum c - dif) :: Char
-   | otherwise = c
-   where dif = fromEnum 'a' - fromEnum 'A'
+   | c `elem` ['a'..'z'] = associate c ['a'..'z'] ['A'..'Z']
+   | otherwise           = c
 
 -- ==============================================================================
 -- Questões
 -- ==============================================================================
 
 -- === questão 1 ===
-ultimo :: [a] -> a
+ultimo :: [t] -> t
 ultimo [x] = x
 ultimo (x : xs) = ultimo xs
 
 -- === questão 2 ===
-insere_no_fim :: a -> [a] -> [a]
+insere_no_fim :: t -> [t] -> [t]
 insere_no_fim p [] = [p]
 insere_no_fim p (x : xs) = x : insere_no_fim p xs
 
 -- === questão 4 ===
-maiores_que :: Ord a => a -> [a] -> [a]
+maiores_que :: (Ord t) => t -> [t] -> [t]
 maiores_que _ [] = []
 maiores_que p (x : xs)
    | x > p         = x : maiores_que p xs
    | otherwise     = maiores_que p xs
 
 -- === questão 13 ===
-sequencia :: Int -> Int -> [Int]
+sequencia :: (Ord i, Num i) => i -> i -> [i]
 sequencia 0 _ = []
 sequencia n m
-   | (n < 0) || (m < 0)    = []
-   | otherwise             = m : sequencia (n - 1) (m + 1)
+   | (n < 0) || (m < 0) = []
+   | otherwise          = m : sequencia (n - 1) (m + 1)
 
 -- === Questão 17 ===
 -- Dado os conjuntos A e B, a união A B é definida como:
 -- x tal que x pertence a A **ou** x pertence a B
-uniao :: (Eq a) => [a] -> [a] -> [a]
+uniao :: (Eq t) => [t] -> [t] -> [t]
 uniao [] [] = []
-uniao a [] = a
-uniao [] b = b
-uniao (x:xs) b
-   | x `elem` b = uniao xs b
-   | otherwise = x : uniao xs b
+uniao x [] = x
+uniao [] y = y
+uniao (x:xs) y
+   | x `elem` y = uniao xs y
+   | otherwise  = x : uniao xs y
 
 -- === Questão 18 ===
 {- Dado os conjuntos A e B, a interseccao A B é definida como:x tal que x pertence
 a A **e** x pertence a B -}
-interseccao :: (Eq a) => [a] -> [a] -> [a]
+interseccao :: (Eq t) => [t] -> [t] -> [t]
 interseccao [] [] = []
 interseccao _ [] = []
 interseccao [] _ = []
-interseccao (x:xs) b
-   | x `elem` b = x : interseccao xs b
-   | otherwise = interseccao xs b
+interseccao (x:xs) y
+   | x `elem` y = x : interseccao xs y
+   | otherwise  = interseccao xs y
 
 -- === Questão 19 ===
-{- Dado os conjuntos A e B, a interseccao A B é definida como: x tal que x pertence
-a A **e** x pertence a B -}
-mesmos_elementos :: (Eq a) => [a] -> [a] -> Bool
+mesmos_elementos :: (Eq t) => [t] -> [t] -> Bool
 mesmos_elementos [] [] = True
-mesmos_elementos a [] = False
-mesmos_elementos [] b = False
-mesmos_elementos (x:xs) b
-   | x `elem` b = mesmos_elementos xs b
-   | otherwise = False
+mesmos_elementos x [] = False
+mesmos_elementos [] y = False
+mesmos_elementos (x:xs) y
+   | x `elem` y = mesmos_elementos xs y
+   | otherwise  = False
 
 -- === Questão 25 ===
-rodar_esquerda :: Int -> [a] -> [a]
+rodar_esquerda :: (Integral n) => n -> [t] -> [t]
 rodar_esquerda _ [] = []
 rodar_esquerda _ [x] = [x]
 rodar_esquerda n list
    | j <= 0 = list
-   | j > 0 = rodar_esquerda (j-1) (last list : init list)
+   | j > 0  = rodar_esquerda (j-1) (last list : init list)
    where j = n `mod` length list
 
 -- === questão 26 ===
@@ -173,7 +179,7 @@ todas_maiusculas (c : cs) = toUpper c : todas_maiusculas cs
 -- ==============================================================================
 
 -- Usado para implementação alternativa de rodar_direita e rodar_esquerda
--- rodar :: Int -> [a] -> [a]
+-- rodar :: (Integral n) => n -> [t] -> [t]
 -- rodar _ [] = []
 -- rodar _ [x] = [x]
 -- rodar n list
@@ -185,9 +191,9 @@ todas_maiusculas (c : cs) = toUpper c : todas_maiusculas cs
 --          else negate (abs n `mod` length list)
 
 -- -- Alternativa rodar_direita
--- rodar_direita :: Int  -> [a] -> [a]
+-- rodar_direita :: (Integral i) => i -> [t] -> [t]
 -- rodar_direita i list = if i <= 0 then list else rodar i list
 
 -- -- Alternativa rodar_esquerda
--- rodar_esquerda :: Int -> [a] -> [a]
+-- rodar_esquerda :: (Integral i) => i -> [t] -> [t]
 -- rodar_esquerda i list = if i <= 0 then list else rodar (negate i) list
