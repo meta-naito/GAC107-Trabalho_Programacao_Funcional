@@ -5,18 +5,32 @@
    
    TRABALHO PRÁTICO - PROGRAMAÇÃO FUNCIONAL
    
-   GRUPO: [Preencher com a letra do seu grupo, ex: 'A']
+   GRUPO: 'O'
    
    INTEGRANTES:
-   1. [Nome Completo do Aluno 1] | Matrícula: [00000000]
-   2. [Nome Completo do Aluno 2] | Matrícula: [00000000]
-   3. [Nome Completo do Aluno 3] | Matrícula: [00000000]
+   1. Arthur Fazzio Mendes | Matrícula: 202520154
+   2. Livia Rezende Masson | Matrícula: [00000000]
+   3. Natan Amaral Uchôa | Matrícula: 202610131
    ============================================================================== -}
+
+{- Opção para o GHC suprimir alertas sobre pragmas não reconhecidos. Necessário
+para as diretivas do Linter -}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+-- Opção para o Linter ignorar padrão de camelCase na nomeação de funções
+{-# HLINT ignore "Use camelCase" #-}
+-- Opção para o Linter não sugerir `foldr`
+{-# HLINT ignore "Use foldr" #-}
+-- Opção para o Linter não sugerir `map`
+{-# HLINT ignore "Use map" #-}
 
 module Trabalho where
 
-import Data.Char (toUpper, toLower, isSpace)
+import Data.Char (toLower, isSpace) -- toUpper removido por implementação própria
 import Data.List (sort)
+
+-- 'hiding' esconde implementações
+import Prelude hiding (abs, elem, head, init, length, negate, otherwise, tail)
+-- NOTA DE DESENVOLVIMENTO: função last foi retirada desta lista ^
 
 -- ATENÇÃO: Defina abaixo exatamente a letra do grupo atribuída a vocês:
 letra_do_grupo :: Char
@@ -31,59 +45,182 @@ letra_do_grupo = 'O'  -- Substitua pela sua letra (Ex: 'A', 'B', 'C'...)
 
 -- Insira suas funções abaixo:
 
--- questão 1
-ultimo :: [a] -> a
-ultimo (x : []) = x
+-- ==============================================================================
+-- Auxiliares
+-- ==============================================================================
+
+-- TODO: Implementação de `mod`
+-- mod :: (Integral i) => i -> i -> i
+
+-- abs:: (Ord i, Num i) => i -> i
+abs 0 = 0
+abs n = if n > 0 then n else negate n
+
+-- associate :: (Eq t) => t -> [t] -> [t] ->  t
+associate n [] _ = n
+associate n _ [] = n
+associate n (x : xs) (y : ys)
+   | x == n    = y
+   | otherwise = associate n xs ys
+
+-- elem :: (Eq t) => t -> [t] -> Bool
+elem a [] = False
+elem a (x:xs)
+   | a == x    = True
+   | otherwise = a `elem` xs
+
+-- head :: [t] -> t
+head [] = error "list is empty"
+head (x : _) = x
+
+-- init :: [t] -> [t]
+init [] = error "list is empty"
+init [x] = []
+init (x : xs) = x : init xs
+
+{-
+-- last :: [t] -> t
+last [] = error "list is empty"
+last [x] = x
+last (_ : xs) = last xs
+-}
+-- ^ ultimo já faz isso!
+
+-- length :: (Num i) => [t] -> i
+length [] = 0
+length (_ : xs) = 1 + length xs
+
+-- negate :: (Eq i, Num i) => i -> i
+negate 0 = 0
+negate n = -n
+
+-- otherwise :: Bool
+otherwise = True
+
+-- tail :: [t] -> [t]
+tail [] = error "list is empty"
+tail (_ : xs) = xs
+
+-- toUpper :: Char -> Char
+toUpper c
+   | c `elem` ['a'..'z'] = associate c ['a'..'z'] ['A'..'Z']
+   | otherwise           = c
+
+-- grau_precedencia :: (Ord t) => t -> [t] -> Int
+grau_precedencia _ [] = 0
+grau_precedencia a (x : xs)
+    | a < x         = 1 + grau_precedencia a xs
+    | otherwise     = grau_precedencia a xs
+
+-- ==============================================================================
+-- Questões
+-- ==============================================================================
+
+-- === questão 1 ===
+-- o último elemento x de uma lista l
+ultimo :: [t] -> t
+ultimo [] = error "lista vazia"
+ultimo [x] = x
 ultimo (x : xs) = ultimo xs
 
--- questão 2
-insere_no_fim :: a -> [a] -> [a]
-insere_no_fim p [] = p : []
-insere_no_fim p (x : xs) = x : (insere_no_fim p xs)
+-- === questão 2 ===
+-- uma lista l que consiste de uma lista k com o elemento p no final
+insere_no_fim :: t -> [t] -> [t]
+insere_no_fim p [] = [p]
+insere_no_fim p (x : xs) = x : insere_no_fim p xs
 
--- questão 4
-maiores_que :: Ord a => a -> [a] -> [a]
+-- === questão 4 ===
+-- uma lista l de todos os x na lista k tal que x > p
+maiores_que :: (Ord t) => t -> [t] -> [t]
 maiores_que _ [] = []
 maiores_que p (x : xs)
    | x > p         = x : maiores_que p xs
    | otherwise     = maiores_que p xs
 
--- questão 13
-sequencia :: Int -> Int -> [Int]
+-- === questão 13 ===
+-- uma lista l = [m, m + 1, ..., m + (n - 2), m + (n - 1)]
+sequencia :: (Ord i, Num i) => i -> i -> [i]
 sequencia 0 _ = []
 sequencia n m
-   | (n < 0) || (m < 0)    = []
-   | otherwise             = m : sequencia (n - 1) (m + 1)
+   | (n < 0) || (m < 0) = error "n ou m negativo"
+   | otherwise          = m : sequencia (n - 1) (m + 1)
 
--- questão 26
+-- === questão 15 ===
+-- todos os top n maiores elementos da lista k,
+-- na ordem em que aparecem
+maiores :: (Ord t) => Int -> [t] -> [t]
+maiores _ [] = []
+maiores 0 _ = []
+maiores n (x : xs)
+   | n < 0                       = error "n é negativo"
+   | (grau_precedencia x xs) < n = x : maiores (n - 1) xs
+   | otherwise                   = maiores n xs
+
+-- === questão 17 ===
+-- Dado os conjuntos A e B,
+-- A ⋃ B = {x ∈ U | x ∈ A **ou** x ∈ B}
+uniao :: (Eq t) => [t] -> [t] -> [t]
+uniao [] [] = []
+uniao x [] = x
+uniao [] y = y
+uniao (x : xs) y
+   | x `elem` y = uniao xs y
+   | otherwise  = x : uniao xs y
+
+-- === questão 18 ===
+-- Dado os conjuntos A e B,
+-- A ⋂ B = {x ∈ U | x ∈ A **e** x ∈ B}
+interseccao :: (Eq t) => [t] -> [t] -> [t]
+interseccao [] [] = []
+interseccao _ [] = []
+interseccao [] _ = []
+interseccao (x : xs) y
+   | x `elem` y = x : interseccao xs y
+   | otherwise  = interseccao xs y
+
+-- === questão 19 ===
+mesmos_elementos :: (Eq t) => [t] -> [t] -> Bool
+mesmos_elementos [] [] = True
+mesmos_elementos x [] = False
+mesmos_elementos [] y = False
+mesmos_elementos (x : xs) y
+   | x `elem` y = mesmos_elementos xs y
+   | otherwise  = False
+
+-- === questão 25 ===
+rodar_esquerda :: (Integral n) => n -> [t] -> [t]
+rodar_esquerda _ [] = []
+rodar_esquerda _ [x] = [x]
+rodar_esquerda n list
+   | j <= 0 = list
+   | j > 0  = rodar_esquerda (j - 1) (ultimo list : init list)
+   where j = n `mod` length list
+
+-- === questão 26 ===
 todas_maiusculas :: [Char] -> [Char]
 todas_maiusculas [] = []
-todas_maiusculas (c : cs) = (maiuscula c) : (todas_maiusculas cs)
+todas_maiusculas (c : cs) = toUpper c : todas_maiusculas cs
 
-maiuscula 'a' = 'A'
-maiuscula 'b' = 'B'
-maiuscula 'c' = 'C'
-maiuscula 'd' = 'D'
-maiuscula 'e' = 'E'
-maiuscula 'f' = 'F'
-maiuscula 'g' = 'G'
-maiuscula 'h' = 'H'
-maiuscula 'i' = 'I'
-maiuscula 'j' = 'J'
-maiuscula 'k' = 'K'
-maiuscula 'l' = 'L'
-maiuscula 'm' = 'M'
-maiuscula 'n' = 'N'
-maiuscula 'o' = 'O'
-maiuscula 'p' = 'P'
-maiuscula 'q' = 'Q'
-maiuscula 'r' = 'R'
-maiuscula 's' = 'S'
-maiuscula 't' = 'T'
-maiuscula 'u' = 'U'
-maiuscula 'v' = 'V'
-maiuscula 'w' = 'W'
-maiuscula 'x' = 'X'
-maiuscula 'y' = 'Y'
-maiuscula 'z' = 'Z'
-maiuscula c = c
+-- ==============================================================================
+-- Implementações alternativas de algumas questões
+-- ==============================================================================
+
+-- função auxiliar das implementações alternativas de rodar_direita e rodar_esquerda
+-- rodar :: (Integral n) => n -> [t] -> [t]
+-- rodar _ [] = []
+-- rodar _ [x] = [x]
+-- rodar n list
+--    | j < 0     = rodar (j + 1) (ultimo list : init list)
+--    | j == 0    = list
+--    | otherwise = rodar (j - 1) (tail list ++ [head list])
+--    where j = if n >= 0
+--          then n `mod` length list
+--          else negate (abs n `mod` length list)
+
+-- rodar_direita alternativa
+-- rodar_direita :: (Integral i) => i -> [t] -> [t]
+-- rodar_direita i list = if i <= 0 then list else rodar i list
+
+-- rodar_esquerda alternativa
+-- rodar_esquerda :: (Integral i) => i -> [t] -> [t]
+-- rodar_esquerda i list = if i <= 0 then list else rodar (negate i) list
