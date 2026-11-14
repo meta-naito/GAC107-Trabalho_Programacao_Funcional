@@ -29,8 +29,8 @@ import Data.Char (toLower, isSpace) -- toUpper removido por implementação pró
 import Data.List (sort)
 
 -- 'hiding' esconde implementações
-import Prelude hiding (abs, elem, head, init, length, negate, otherwise, tail)
--- NOTA DE DESENVOLVIMENTO: função last foi retirada desta lista ^
+import Prelude hiding (otherwise, elem, associate, length, init, head, tail, toUpper)
+-- FUNÇÕES RETIRADAS: abs, negate
 
 -- ATENÇÃO: Defina abaixo exatamente a letra do grupo atribuída a vocês:
 letra_do_grupo :: Char
@@ -49,12 +49,18 @@ letra_do_grupo = 'O'  -- Substitua pela sua letra (Ex: 'A', 'B', 'C'...)
 -- Auxiliares
 -- ==============================================================================
 
--- TODO: Implementação de `mod`
+-- TODO: Implementação de `mod`...
+-- se não encher o arquivo com muita função auxiliar!
 -- mod :: (Integral i) => i -> i -> i
 
--- abs:: (Ord i, Num i) => i -> i
-abs 0 = 0
-abs n = if n > 0 then n else negate n
+-- otherwise :: Bool
+otherwise = True
+
+-- elem :: (Eq t) => t -> [t] -> Bool
+elem a [] = False
+elem a (x : xs)
+   | a == x    = True
+   | otherwise = a `elem` xs
 
 -- associate :: (Eq t) => t -> [t] -> [t] ->  t
 associate n [] _ = n
@@ -63,39 +69,22 @@ associate n (x : xs) (y : ys)
    | x == n    = y
    | otherwise = associate n xs ys
 
--- elem :: (Eq t) => t -> [t] -> Bool
-elem a [] = False
-elem a (x:xs)
-   | a == x    = True
-   | otherwise = a `elem` xs
+-- OTIMIZADA
+-- length :: (Num i) => [t] -> i
+length xs = length_aux xs 0
 
--- head :: [t] -> t
-head [] = error "list is empty"
-head (x : _) = x
+-- length_aux :: (Num i) => [t] -> i -> i
+length_aux [] current_size = current_size
+length_aux (x : xs) current_size = length_aux xs (current_size + 1)
 
 -- init :: [t] -> [t]
 init [] = error "list is empty"
 init [x] = []
 init (x : xs) = x : init xs
 
-{-
--- last :: [t] -> t
-last [] = error "list is empty"
-last [x] = x
-last (_ : xs) = last xs
--}
--- ^ ultimo já faz isso!
-
--- length :: (Num i) => [t] -> i
-length [] = 0
-length (_ : xs) = 1 + length xs
-
--- negate :: (Eq i, Num i) => i -> i
-negate 0 = 0
-negate n = -n
-
--- otherwise :: Bool
-otherwise = True
+-- head :: [t] -> t
+head [] = error "list is empty"
+head (x : _) = x
 
 -- tail :: [t] -> [t]
 tail [] = error "list is empty"
@@ -106,11 +95,25 @@ toUpper c
    | c `elem` ['a'..'z'] = associate c ['a'..'z'] ['A'..'Z']
    | otherwise           = c
 
--- grau_precedencia :: (Ord t) => t -> [t] -> Int
-grau_precedencia _ [] = 0
-grau_precedencia a (x : xs)
-    | a < x         = 1 + grau_precedencia a xs
-    | otherwise     = grau_precedencia a xs
+-- OTIMIZADA
+-- grau_precedencia :: (Ord t, Num i) => t -> [t] -> i
+grau_precedencia a xs = grau_aux a xs 0
+-- ^ quantos elementos o elemento a precede na lista l
+
+-- grau_aux :: (Ord t, Num i) => t -> [t] -> i -> i
+grau_aux _ [] grau_corrente = grau_corrente
+grau_aux a (x : xs) grau_corrente
+   | a < x        = grau_aux a xs (grau_corrente + 1)
+   | otherwise    = grau_aux a xs grau_corrente
+
+-- ADICIONADA
+-- mesmos_aux :: (Eq t) => [t] -> [t] -> Bool
+mesmos_aux [] _ = True -- chegou ao final da lista l
+mesmos_aux (x : xs) ys 
+   | x `elem` ys = mesmos_aux xs ys
+   | otherwise   = False
+-- ^ consome os elementos da lista l na medida em que estão nas lista k
+-- l, k inicialmente não-vazias
 
 -- ==============================================================================
 -- Questões
@@ -157,7 +160,7 @@ maiores n (x : xs)
    | otherwise                   = maiores n xs
 
 -- === questão 17 ===
--- Dado os conjuntos A e B,
+-- dado os conjuntos A e B,
 -- A ⋃ B = {x ∈ U | x ∈ A **ou** x ∈ B}
 uniao :: (Eq t) => [t] -> [t] -> [t]
 uniao [] [] = []
@@ -168,7 +171,7 @@ uniao (x : xs) y
    | otherwise  = x : uniao xs y
 
 -- === questão 18 ===
--- Dado os conjuntos A e B,
+-- dado os conjuntos A e B,
 -- A ⋂ B = {x ∈ U | x ∈ A **e** x ∈ B}
 interseccao :: (Eq t) => [t] -> [t] -> [t]
 interseccao [] [] = []
@@ -178,23 +181,24 @@ interseccao (x : xs) y
    | x `elem` y = x : interseccao xs y
    | otherwise  = interseccao xs y
 
+-- CORRIGIDA
 -- === questão 19 ===
+-- dadas as listas l, k,
+-- os elementos de l estão em k e os elementos de k estão em l
 mesmos_elementos :: (Eq t) => [t] -> [t] -> Bool
 mesmos_elementos [] [] = True
-mesmos_elementos x [] = False
-mesmos_elementos [] y = False
-mesmos_elementos (x : xs) y
-   | x `elem` y = mesmos_elementos xs y
-   | otherwise  = False
+mesmos_elementos _ [] = False
+mesmos_elementos [] _ = False
+mesmos_elementos xs ys = (mesmos_aux xs ys) && (mesmos_aux ys xs)
 
 -- === questão 25 ===
 rodar_esquerda :: (Integral n) => n -> [t] -> [t]
 rodar_esquerda _ [] = []
 rodar_esquerda _ [x] = [x]
-rodar_esquerda n list
-   | j <= 0 = list
-   | j > 0  = rodar_esquerda (j - 1) (ultimo list : init list)
-   where j = n `mod` length list
+rodar_esquerda n xs
+   | j <= 0 = xs
+   | j > 0  = rodar_esquerda (j - 1) (ultimo xs : init xs)
+   where j = n `mod` length xs
 
 -- === questão 26 ===
 todas_maiusculas :: [Char] -> [Char]
@@ -204,6 +208,18 @@ todas_maiusculas (c : cs) = toUpper c : todas_maiusculas cs
 -- ==============================================================================
 -- Implementações alternativas de algumas questões
 -- ==============================================================================
+
+-- função auxiliar length, versão não-otimizada
+-- length :: (Num i) => [t] -> i
+-- length [] = 0
+-- length (_ : xs) = 1 + length xs
+
+-- função auxiliar grau_precedencia, versão não-otimizada
+-- grau_precedencia :: (Ord t) => t -> [t] -> Int
+-- grau_precedencia _ [] = 0
+-- grau_precedencia a (x : xs)
+--   | a < x         = 1 + grau_precedencia a xs
+--   | otherwise     = grau_precedencia a xs
 
 -- função auxiliar das implementações alternativas de rodar_direita e rodar_esquerda
 -- rodar :: (Integral n) => n -> [t] -> [t]
