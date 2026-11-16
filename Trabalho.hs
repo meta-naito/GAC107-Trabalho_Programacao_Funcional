@@ -30,7 +30,6 @@ import Data.List (sort)
 
 -- 'hiding' esconde implementações
 import Prelude hiding (otherwise, elem, associate, length, init, head, tail, toUpper)
--- FUNÇÕES RETIRADAS: abs, negate
 
 -- ATENÇÃO: Defina abaixo exatamente a letra do grupo atribuída a vocês:
 letra_do_grupo :: Char
@@ -69,7 +68,6 @@ associate n (x : xs) (y : ys)
    | x == n    = y
    | otherwise = associate n xs ys
 
--- OTIMIZADA
 -- length :: (Num i) => [t] -> i
 length xs = length_aux xs 0
 
@@ -95,7 +93,6 @@ toUpper c
    | c `elem` ['a'..'z'] = associate c ['a'..'z'] ['A'..'Z']
    | otherwise           = c
 
--- OTIMIZADA
 -- grau_precedencia :: (Ord t, Num i) => t -> [t] -> i
 grau_precedencia a xs = grau_aux a xs 0
 -- ^ quantos elementos o elemento a precede na lista l
@@ -106,7 +103,6 @@ grau_aux a (x : xs) grau_corrente
    | a < x        = grau_aux a xs (grau_corrente + 1)
    | otherwise    = grau_aux a xs grau_corrente
 
--- ADICIONADA
 -- mesmos_aux :: (Eq t) => [t] -> [t] -> Bool
 mesmos_aux [] _ = True -- chegou ao final da lista l
 mesmos_aux (x : xs) ys 
@@ -114,6 +110,47 @@ mesmos_aux (x : xs) ys
    | otherwise   = False
 -- ^ consome os elementos da lista l na medida em que estão nas lista k
 -- l, k inicialmente não-vazias
+
+-- ADICIONADA
+-- ordenado :: (Ord t) => t -> Bool
+ordenado [] = True
+ordenado [a] = True
+ordenado (a : b : xs)
+   | a <= b    = ordenado (b : xs)
+   | otherwise = False
+
+-- ADICIONADA
+-- insere_ord_aux :: (Ord t) => t -> [t] -> [t]
+insere_ord_aux n [] = [n]
+insere_ord_aux n (x : xs)
+   | n > x     = x : insere_ord_aux n xs
+   | otherwise = [n] ++ (x : xs)
+
+-- ADICIONADA
+-- insertion_sort :: (Ord t) => [t] -> [t] -> [t]
+insertion_sort [] l_ordenada = l_ordenada
+insertion_sort (x : xs) l_ordenada =
+   insertion_sort xs (insere_ordenado x l_ordenada)
+
+-- ADICIONADA
+-- somatorio :: (Num x) => [x] -> x
+somatorio l = soma_aux l 0
+
+-- ADICIONADA
+-- soma_aux :: (Num x) => [x] -> x
+soma_aux [] soma_corrente = soma_corrente
+soma_aux (x : xs) soma_corrente = soma_aux xs (soma_corrente + x)
+
+-- ADICIONADA
+-- soma_deltas :: (Num x) => [x] -> x -> x
+soma_deltas l x_barra = soma_deltas_aux l x_barra 0
+
+-- ADICIONADA
+-- soma_deltas_aux :: (Num x) => [x] -> x -> x -> x
+soma_deltas_aux [] _ soma_corrente = soma_corrente
+soma_deltas_aux (x_i : x_is) x_barra soma_corrente =
+   soma_deltas_aux x_is x_barra (soma_corrente + delta)
+      where delta = (x_i - x_barra)^2
 
 -- ==============================================================================
 -- Questões
@@ -181,7 +218,6 @@ interseccao (x : xs) y
    | x `elem` y = x : interseccao xs y
    | otherwise  = interseccao xs y
 
--- CORRIGIDA
 -- === questão 19 ===
 -- dadas as listas l, k,
 -- os elementos de l estão em k e os elementos de k estão em l
@@ -190,6 +226,20 @@ mesmos_elementos [] [] = True
 mesmos_elementos _ [] = False
 mesmos_elementos [] _ = False
 mesmos_elementos xs ys = (mesmos_aux xs ys) && (mesmos_aux ys xs)
+
+-- ADICIONADA
+-- === questão 20 ===
+-- lista k (ordenada) com um elemento n inserido na lista l (também ordenada)
+insere_ordenado :: (Ord t) => t -> [t] -> [t]
+insere_ordenado n l
+   | ordenado l = insere_ord_aux n l
+   | otherwise  = error "lista não ordenada"
+
+-- ADICIONADA
+-- === questão 22 ===
+-- lista k que consiste em uma lista l ordenada
+ordena :: (Ord t) => [t] -> [t]
+ordena l = insertion_sort l []
 
 -- === questão 25 ===
 rodar_esquerda :: (Integral n) => n -> [t] -> [t]
@@ -204,6 +254,18 @@ rodar_esquerda n xs
 todas_maiusculas :: [Char] -> [Char]
 todas_maiusculas [] = []
 todas_maiusculas (c : cs) = toUpper c : todas_maiusculas cs
+
+-- ADICIONADA
+-- === questão 28 ===
+-- a média aritmética (populacional) de uma lista l de números
+media :: (Fractional x) => [x] -> x
+media l = somatorio l / length l
+
+-- ADICIONADA
+-- == questão 29 ===
+-- a variância (populacional) de uma lista l de números
+variancia :: (Fractional x) => [x] -> x
+variancia l = soma_deltas l (media l) / length l
 
 -- ==============================================================================
 -- Implementações alternativas de algumas questões
@@ -240,3 +302,14 @@ todas_maiusculas (c : cs) = toUpper c : todas_maiusculas cs
 -- rodar_esquerda alternativa
 -- rodar_esquerda :: (Integral i) => i -> [t] -> [t]
 -- rodar_esquerda i list = if i <= 0 then list else rodar (negate i) list
+
+-- função auxiliar que cria lista de deltas para a variância
+-- elem_menos_media :: (Floating a) => [a] -> a -> [a]
+-- elem_menos_media [] _ = []
+-- elem_menos_media (x : xs) n = (x - n)**2 : elem_menos_media xs n
+
+-- variancia alternativa
+-- variancia :: (Floating a) => [a] -> a
+-- variancia [] = error "lista vazia!"
+-- variancia [x] = 0
+-- variancia lista (x : xs) = media (elem_menos_media lista (media lista))
